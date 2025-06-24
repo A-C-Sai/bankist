@@ -188,9 +188,33 @@ const updateUI = function (acc) {
   calcDisplaySummary(acc);
 };
 
+const startLogOutTimer = function () {
+  const tick = function () {
+    // When 0 seconds, stop timer and log out user
+    if (!time) {
+      containerApp.style.opacity = 0;
+      labelWelcome.textContent = `Log in to get started`;
+      clearInterval(timer);
+    }
+    // In each call, disply the remaining time to the UI
+    const min = Math.trunc(time / 60);
+    const sec = time % 60;
+    labelTimer.textContent = `${String(min).padStart(2, 0)}:${String(sec).padStart(2, 0)}`;
+    time--;
+  };
+
+  // Set time
+  let time = 100;
+  tick(); // exporting the function and calling it immediately ensures that there is no delay in timer
+  // Call the timer every second
+  const timer = setInterval(tick, 1000);
+
+  return timer;
+};
+
 ///////////////////////////////////////
 // Event handlers
-let currentAccount;
+let currentAccount, timer;
 
 btnLogin.addEventListener('click', function (e) {
   // Prevent form from submitting
@@ -200,6 +224,10 @@ btnLogin.addEventListener('click', function (e) {
   console.log(currentAccount);
 
   if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    // Start LogOut Timer
+    if (timer) clearInterval(timer); // fixes multiple timers issue when switching users
+    timer = startLogOutTimer();
+
     // Display UI and message
     labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(' ')[0]}`;
     containerApp.style.opacity = 100;
@@ -255,6 +283,10 @@ btnTransfer.addEventListener('click', function (e) {
 
     // Update UI
     updateUI(currentAccount);
+
+    // RESET TIMER
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -274,6 +306,10 @@ btnLoan.addEventListener('click', function (e) {
 
       // Update UI
       updateUI(currentAccount);
+
+      // RESET TIMER
+      clearInterval(timer);
+      timer = startLogOutTimer();
     }, 3000);
   }
   inputLoanAmount.value = '';
